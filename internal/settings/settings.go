@@ -83,7 +83,7 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 
-	s.DataDir, err = getString("LEDNS_DATA_DIR", "/var/lib/letsencrypt", true)
+	s.DataDir, err = getString("LEDNS_DATA_DIR", "/var/lib/ledns", true)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 
-	configDir, err := getString("LEDNS_CONFIG_DIR", "/etc/letsencrypt.d", true)
+	configDir, err := getString("LEDNS_CONFIG_DIR", "/etc/ledns.d", true)
 	if err != nil {
 		return nil, err
 	}
