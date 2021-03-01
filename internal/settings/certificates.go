@@ -2,7 +2,6 @@ package settings
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,6 +12,9 @@ import (
 func getCertificates(configdir string) ([][]string, error) {
 	files, err := ioutil.ReadDir(configdir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 
@@ -52,9 +54,6 @@ func getCertificates(configdir string) ([][]string, error) {
 		if err := scanner.Err(); err != nil {
 			return nil, err
 		}
-	}
-	if len(rv) == 0 {
-		return nil, errors.New("settings: no certificate defined")
 	}
 
 	return rv, nil

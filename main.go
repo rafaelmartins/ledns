@@ -23,8 +23,13 @@ func main() {
 	log.Printf("    timeout: %s", s.Timeout)
 	log.Printf("    data directory: %s", s.DataDir)
 	log.Printf("    certificates:")
-	for _, cert := range s.Certificates {
-		log.Printf("        %q", cert)
+	if len(s.Certificates) > 0 {
+		for _, cert := range s.Certificates {
+			log.Printf("        %q", cert)
+		}
+	} else {
+		log.Printf("        no certificates defined. exiting ...")
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), s.Timeout)
