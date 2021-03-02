@@ -56,9 +56,15 @@ func main() {
 		}
 	}
 
-	for _, cert := range s.Certificates {
-		if err := le.RunCommand(cert, s.UpdateCommand); err != nil {
+	if len(s.UpdateCommandOnce) > 0 {
+		if err := le.RunCommandOnce(s.UpdateCommandOnce); err != nil {
 			log.Fatal("error: ", err)
+		}
+	} else {
+		for _, cert := range s.Certificates {
+			if err := le.RunCommand(cert, s.UpdateCommand); err != nil {
+				log.Fatal("error: ", err)
+			}
 		}
 	}
 }

@@ -22,6 +22,7 @@ type Settings struct {
 	DataDir             string
 	Certificates        [][]string
 	UpdateCommand       []string
+	UpdateCommandOnce   []string
 	Production          bool
 	Force               bool
 	Timeout             time.Duration
@@ -101,6 +102,15 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 	s.Certificates, err = getCertificates(configDir)
+	if err != nil {
+		return nil, err
+	}
+
+	updateCommandOnce, err := getString("LEDNS_UPDATE_COMMAND_ONCE", "", false)
+	if err != nil {
+		return nil, err
+	}
+	s.UpdateCommandOnce, err = shlex.Split(updateCommandOnce)
 	if err != nil {
 		return nil, err
 	}

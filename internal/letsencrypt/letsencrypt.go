@@ -275,9 +275,24 @@ func (l *LetsEncrypt) RunCommand(names []string, command []string) error {
 		cmd := exec.Command(command[0], command[1:]...)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			return err
-		}
+		cmd.Env = append(
+			os.Environ(),
+			"LEDNS_COMMON_NAME="+names[0],
+			"LEDNS_CERTIFICATE="+filepath.Join(l.dir, "certs", names[0], l.getPemFilename("fullchain")),
+		)
+		return cmd.Run()
+	}
+	return nil
+}
+
+func (l *LetsEncrypt) RunCommandOnce(command []string) error {
+	if len(command) > 0 {
+		log.Printf("running update command %q ...", command)
+
+		cmd := exec.Command(command[0], command[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
 	}
 	return nil
 }
