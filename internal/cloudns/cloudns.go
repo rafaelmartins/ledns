@@ -128,7 +128,7 @@ func (c *ClouDNS) WaitForChallenge(ctx context.Context, name string) error {
 		default:
 		}
 
-		time.Sleep(30 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
