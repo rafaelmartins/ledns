@@ -16,7 +16,7 @@ func NewLock(fpath string) (*Lock, error) {
 		return nil, err
 	}
 
-	fp, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0700)
+	fp, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		if os.IsExist(err) {
 			return nil, fmt.Errorf("lock: lock exists: %s", fpath)

@@ -27,7 +27,7 @@ func createPrivateKey(keyfile string) (*ecdsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	fp, err := os.OpenFile(keyfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0700)
+	fp, err := os.OpenFile(keyfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ func writeCertificate(certfile string, chain [][]byte) error {
 		return err
 	}
 
-	fp, err := os.OpenFile(certfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0700)
+	fp, err := os.OpenFile(certfile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return err
 	}
