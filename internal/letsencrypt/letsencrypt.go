@@ -108,7 +108,7 @@ func (l *LetsEncrypt) cleanupAuthorizations(ctx context.Context, commonName stri
 	}
 }
 
-func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, command []string, force bool) error {
+func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force bool) error {
 	if l.client == nil {
 		return errors.New("letsencrypt: acme client not defined")
 	}
@@ -264,8 +264,13 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 		return err
 	}
 
+	log.Printf("[%s] certificate request done", commonName)
+	return nil
+}
+
+func (l *LetsEncrypt) RunCommand(names []string, command []string) error {
 	if len(command) > 0 {
-		log.Printf("[%s] running update command %q ...", commonName, command)
+		log.Printf("[%s] running update command %q ...", names[0], command)
 
 		cmd := exec.Command(command[0], command[1:]...)
 		cmd.Stdout = os.Stdout
@@ -274,8 +279,5 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 			return err
 		}
 	}
-
-	log.Printf("[%s] done", commonName)
-
 	return nil
 }

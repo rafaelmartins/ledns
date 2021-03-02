@@ -51,7 +51,13 @@ func main() {
 			continue
 		}
 
-		if err := le.GetCertificate(ctx, cert, s.UpdateCommand, s.Force); err != nil {
+		if err := le.GetCertificate(ctx, cert, s.Force); err != nil {
+			log.Fatal("error: ", err)
+		}
+	}
+
+	for _, cert := range s.Certificates {
+		if err := le.RunCommand(cert, s.UpdateCommand); err != nil {
 			log.Fatal("error: ", err)
 		}
 	}
