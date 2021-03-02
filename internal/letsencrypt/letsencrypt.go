@@ -47,20 +47,27 @@ func NewLetsEncrypt(ctx context.Context, dir string, production bool, cloudnsAut
 	return rv, nil
 }
 
+func (l *LetsEncrypt) getPemFilename(name string) string {
+	if l.production {
+		return name + ".pem"
+	}
+	return name + "-staging.pem"
+}
+
+func (l *LetsEncrypt) getUrl() string {
+	if l.production {
+		return urlProduction
+	}
+	return urlStaging
+}
+
 func (l *LetsEncrypt) getClient(ctx context.Context) (*acme.Client, error) {
 	accountDir := filepath.Join(l.dir, "account")
 	if err := os.MkdirAll(accountDir, 0700); err != nil {
 		return nil, err
 	}
 
-	u := urlStaging
-	k := "key-staging.pem"
-	if l.production {
-		u = urlProduction
-		k = "key-production.pem"
-	}
-
-	keyFile := filepath.Join(accountDir, k)
+	keyFile := filepath.Join(accountDir, l.getPemFilename("key"))
 	if _, err := os.Stat(keyFile); err == nil {
 		log.Printf("loading account: %s", keyFile)
 
@@ -71,7 +78,7 @@ func (l *LetsEncrypt) getClient(ctx context.Context) (*acme.Client, error) {
 
 		return &acme.Client{
 			Key:          pk,
-			DirectoryURL: u,
+			DirectoryURL: l.getUrl(),
 		}, nil
 	}
 
@@ -84,7 +91,7 @@ func (l *LetsEncrypt) getClient(ctx context.Context) (*acme.Client, error) {
 
 	client := &acme.Client{
 		Key:          pk,
-		DirectoryURL: u,
+		DirectoryURL: l.getUrl(),
 	}
 	if _, err := client.Register(ctx, &acme.Account{}, acme.AcceptTOS); err != nil {
 		return nil, err
@@ -114,7 +121,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 
 	log.Printf("[%s] starting ...", commonName)
 
-	symCertfile := filepath.Join(l.dir, "certs", commonName, "fullchain.pem")
+	symCertfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("fullchain"))
 
 	if force {
 		log.Printf("[%s] requesting new certificate (forced) ...", commonName)
@@ -217,7 +224,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 
 	ts := time.Now().UTC().Format("20060102150405")
 
-	keyfile := filepath.Join(l.dir, "certs", commonName, "privkey-"+ts+".pem")
+	keyfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("privkey-"+ts))
 	pk, err := createPrivateKey(keyfile)
 	if err != nil {
 		return err
@@ -233,7 +240,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 		return err
 	}
 
-	certfile := filepath.Join(l.dir, "certs", commonName, "fullchain-"+ts+".pem")
+	certfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("fullchain-"+ts))
 	if err := writeCertificate(certfile, chain); err != nil {
 		return err
 	}
@@ -242,18 +249,18 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, comman
 
 	// FIXME: make this symlink replacement actually atomic/safe
 
-	symKeyfile := filepath.Join(l.dir, "certs", commonName, "privkey.pem")
+	symKeyfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("privkey"))
 	if _, err := os.Lstat(symKeyfile); err == nil {
 		os.Remove(symKeyfile)
 	}
-	if err := os.Symlink("privkey-"+ts+".pem", symKeyfile); err != nil {
+	if err := os.Symlink(l.getPemFilename("privkey-"+ts), symKeyfile); err != nil {
 		return err
 	}
 
 	if _, err := os.Lstat(symCertfile); err == nil {
 		os.Remove(symCertfile)
 	}
-	if err := os.Symlink("fullchain-"+ts+".pem", symCertfile); err != nil {
+	if err := os.Symlink(l.getPemFilename("fullchain-"+ts), symCertfile); err != nil {
 		return err
 	}
 
