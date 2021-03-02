@@ -46,22 +46,29 @@ func main() {
 		log.Fatal("error: ", err)
 	}
 
+	newCerts := [][]string{}
 	for _, cert := range s.Certificates {
 		if len(cert) == 0 {
 			continue
 		}
 
-		if err := le.GetCertificate(ctx, cert, s.Force); err != nil {
+		newCert, err := le.GetCertificate(ctx, cert, s.Force)
+		if err != nil {
 			log.Fatal("error: ", err)
+		}
+		if newCert {
+			newCerts = append(newCerts, cert)
 		}
 	}
 
 	if len(s.UpdateCommandOnce) > 0 {
-		if err := le.RunCommandOnce(s.UpdateCommandOnce); err != nil {
-			log.Fatal("error: ", err)
+		if len(newCerts) > 0 {
+			if err := le.RunCommandOnce(s.UpdateCommandOnce); err != nil {
+				log.Fatal("error: ", err)
+			}
 		}
 	} else {
-		for _, cert := range s.Certificates {
+		for _, cert := range newCerts {
 			if err := le.RunCommand(cert, s.UpdateCommand); err != nil {
 				log.Fatal("error: ", err)
 			}

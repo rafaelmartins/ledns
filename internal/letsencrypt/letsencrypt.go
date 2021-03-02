@@ -108,13 +108,13 @@ func (l *LetsEncrypt) cleanupAuthorizations(ctx context.Context, commonName stri
 	}
 }
 
-func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force bool) error {
+func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force bool) (bool, error) {
 	if l.client == nil {
-		return errors.New("letsencrypt: acme client not defined")
+		return false, errors.New("letsencrypt: acme client not defined")
 	}
 
 	if len(names) == 0 {
-		return errors.New("letsencrypt: no name provided")
+		return false, errors.New("letsencrypt: no name provided")
 	}
 
 	commonName := names[0]
@@ -130,7 +130,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		needsNew, expiration, added, removed := needsNewCertificate(symCertfile, names)
 		if !needsNew {
 			log.Printf("[%s] current certificate expires %s. skipping renew ...", commonName, expiration.Format(time.UnixDate))
-			return nil
+			return false, nil
 		}
 		if expiration.IsZero() {
 			if len(added) > 0 || len(removed) > 0 {
@@ -145,7 +145,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 
 	order, err := l.client.AuthorizeOrder(ctx, acme.DomainIDs(names...))
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer l.cleanupAuthorizations(ctx, commonName, order.AuthzURLs)
 
@@ -155,7 +155,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 	for _, u := range order.AuthzURLs {
 		z, err := l.client.GetAuthorization(ctx, u)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		if z.Status != acme.StatusPending {
@@ -170,18 +170,18 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 			}
 		}
 		if chal == nil {
-			return fmt.Errorf("letsencrypt: %s: no dns-01 challenge found", z.Identifier.Value)
+			return false, fmt.Errorf("letsencrypt: %s: no dns-01 challenge found", z.Identifier.Value)
 		}
 
 		log.Printf("[%s: %s] generating challenge record ...", commonName, z.Identifier.Value)
 		token, err := l.client.DNS01ChallengeRecord(chal.Token)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		log.Printf("[%s: %s] deploying challenge ...", commonName, z.Identifier.Value)
 		if err := l.dns.DeployChallenge(ctx, z.Identifier.Value, token); err != nil {
-			return err
+			return false, err
 		}
 		defer func(ctx context.Context, dns *cloudns.ClouDNS, commonName string, name string, token string) {
 			log.Printf("[%s: %s] cleaning challenge ...", commonName, name)
@@ -199,7 +199,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		log.Printf("[%s] waiting for DNS propagation of challenges ...", commonName)
 		for _, name := range authNames {
 			if err := l.dns.WaitForChallenge(ctx, name); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
@@ -208,7 +208,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		log.Printf("[%s] accepting challenges ...", commonName)
 		for _, chal := range chals {
 			if _, err := l.client.Accept(ctx, chal); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
@@ -217,7 +217,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		log.Printf("[%s] waiting for autorizations ...", commonName)
 		for _, uri := range authURIs {
 			if _, err := l.client.WaitAuthorization(ctx, uri); err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
@@ -227,22 +227,22 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 	keyfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("privkey-"+ts))
 	pk, err := createPrivateKey(keyfile)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	csr, err := createCertificateRequest(pk, names)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	chain, _, err := l.client.CreateOrderCert(ctx, order.FinalizeURL, csr, true)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	certfile := filepath.Join(l.dir, "certs", commonName, l.getPemFilename("fullchain-"+ts))
 	if err := writeCertificate(certfile, chain); err != nil {
-		return err
+		return false, err
 	}
 
 	log.Printf("[%s] updating symlinks ...", commonName)
@@ -254,18 +254,18 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		os.Remove(symKeyfile)
 	}
 	if err := os.Symlink(l.getPemFilename("privkey-"+ts), symKeyfile); err != nil {
-		return err
+		return false, err
 	}
 
 	if _, err := os.Lstat(symCertfile); err == nil {
 		os.Remove(symCertfile)
 	}
 	if err := os.Symlink(l.getPemFilename("fullchain-"+ts), symCertfile); err != nil {
-		return err
+		return false, err
 	}
 
 	log.Printf("[%s] certificate request done", commonName)
-	return nil
+	return true, nil
 }
 
 func (l *LetsEncrypt) RunCommand(names []string, command []string) error {
