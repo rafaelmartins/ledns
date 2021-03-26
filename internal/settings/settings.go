@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/google/shlex"
@@ -56,14 +55,16 @@ func getUint(key string, def uint64, required bool, base int, bitSize int) (uint
 	return v2, nil
 }
 
-func getBool(key string) bool {
-	if v, found := os.LookupEnv(key); found {
-		s := strings.ToLower(strings.TrimSpace(v))
-		if s == "1" || s == "true" || s == "yes" || s == "on" {
-			return true
-		}
+func getBool(key string, def bool) (bool, error) {
+	v, err := getString(key, strconv.FormatBool(def), true)
+	if err != nil {
+		return false, err
 	}
-	return false
+	v2, err := strconv.ParseBool(v)
+	if err != nil {
+		return false, err
+	}
+	return v2, nil
 }
 
 func Get() (*Settings, error) {
@@ -124,12 +125,18 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 
-	s.Production = getBool("LEDNS_PRODUCTION")
+	s.Production, err = getBool("LEDNS_PRODUCTION", false)
+	if err != nil {
+		return nil, err
+	}
 	if !s.Production {
 		log.Print("WARNING: using staging endpoint for Let's Encrypt. please export LEDNS_PRODUCTION=true to use production endpoint when ready for it.")
 	}
 
-	s.Force = getBool("LEDNS_FORCE")
+	s.Force, err = getBool("LEDNS_FORCE", false)
+	if err != nil {
+		return nil, err
+	}
 
 	timeoutMinutes, err := getUint("LEDNS_TIMEOUT_MINUTES", 15, true, 10, 8)
 	if err != nil {
