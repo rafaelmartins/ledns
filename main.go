@@ -41,9 +41,14 @@ func main() {
 	}
 	defer l.Close()
 
+	exit := func(e error) {
+		l.Close()
+		log.Fatal("error: ", e)
+	}
+
 	le, err := letsencrypt.NewLetsEncrypt(ctx, s.DataDir, s.Production, s.ClouDNSAuthID, s.ClouDNSSubAuthID, s.ClouDNSAuthPassword)
 	if err != nil {
-		log.Fatal("error: ", err)
+		exit(err)
 	}
 
 	newCerts := [][]string{}
@@ -54,7 +59,7 @@ func main() {
 
 		newCert, err := le.GetCertificate(ctx, cert, s.Force)
 		if err != nil {
-			log.Fatal("error: ", err)
+			exit(err)
 		}
 		if newCert {
 			newCerts = append(newCerts, cert)
@@ -64,13 +69,13 @@ func main() {
 	if len(s.UpdateCommandOnce) > 0 {
 		if len(newCerts) > 0 {
 			if err := le.RunCommandOnce(s.UpdateCommandOnce); err != nil {
-				log.Fatal("error: ", err)
+				exit(err)
 			}
 		}
 	} else {
 		for _, cert := range newCerts {
 			if err := le.RunCommand(cert, s.UpdateCommand); err != nil {
-				log.Fatal("error: ", err)
+				exit(err)
 			}
 		}
 	}

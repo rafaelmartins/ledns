@@ -21,17 +21,24 @@ func NewLock(fpath string) (*Lock, error) {
 		if os.IsExist(err) {
 			return nil, fmt.Errorf("lock: lock exists: %s", fpath)
 		}
+		fp.Close()
+		os.Remove(fpath)
 		return nil, err
 	}
-	defer fp.Close()
 
 	if _, err := fp.Write([]byte(fmt.Sprintf("%d\n", int32(time.Now().Unix())))); err != nil {
+		fp.Close()
+		os.Remove(fpath)
 		return nil, err
 	}
+	fp.Close()
 
 	return &Lock{fpath: fpath}, nil
 }
 
 func (l *Lock) Close() error {
+	if l.fpath == "" {
+		return nil
+	}
 	return os.Remove(l.fpath)
 }
