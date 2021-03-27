@@ -17,6 +17,7 @@ var (
 
 type Settings struct {
 	ClouDNSAuthID       string
+	ClouDNSSubAuthID    string
 	ClouDNSAuthPassword string
 	DataDir             string
 	Certificates        [][]string
@@ -75,9 +76,21 @@ func Get() (*Settings, error) {
 	var err error
 	s := &Settings{}
 
-	s.ClouDNSAuthID, err = getString("LEDNS_CLOUDNS_AUTH_ID", "", true)
+	s.ClouDNSAuthID, err = getString("LEDNS_CLOUDNS_AUTH_ID", "", false)
 	if err != nil {
 		return nil, err
+	}
+
+	s.ClouDNSSubAuthID, err = getString("LEDNS_CLOUDNS_SUB_AUTH_ID", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
+		return nil, fmt.Errorf("settings: either LEDNS_CLOUDNS_AUTH_ID or LEDNS_CLOUDNS_SUB_AUTH_ID must be provided")
+	}
+	if s.ClouDNSAuthID != "" && s.ClouDNSSubAuthID != "" {
+		return nil, fmt.Errorf("settings: LEDNS_CLOUDNS_AUTH_ID and LEDNS_CLOUDNS_SUB_AUTH_ID are mutually exclusive")
 	}
 
 	s.ClouDNSAuthPassword, err = getString("LEDNS_CLOUDNS_AUTH_PASSWORD", "", true)

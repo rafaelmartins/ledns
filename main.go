@@ -41,7 +41,7 @@ func main() {
 	}
 	defer l.Close()
 
-	le, err := letsencrypt.NewLetsEncrypt(ctx, s.DataDir, s.Production, s.ClouDNSAuthID, s.ClouDNSAuthPassword)
+	le, err := letsencrypt.NewLetsEncrypt(ctx, s.DataDir, s.Production, s.ClouDNSAuthID, s.ClouDNSSubAuthID, s.ClouDNSAuthPassword)
 	if err != nil {
 		log.Fatal("error: ", err)
 	}

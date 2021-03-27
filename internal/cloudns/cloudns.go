@@ -17,12 +17,14 @@ const (
 
 type ClouDNS struct {
 	authID       string
+	subAuthID    string
 	authPassword string
 }
 
-func NewClouDNS(ctx context.Context, authID string, authPassword string) (*ClouDNS, error) {
+func NewClouDNS(ctx context.Context, authID string, subAuthID string, authPassword string) (*ClouDNS, error) {
 	rv := &ClouDNS{
 		authID:       authID,
+		subAuthID:    subAuthID,
 		authPassword: authPassword,
 	}
 
@@ -43,7 +45,11 @@ func (c *ClouDNS) request(ctx context.Context, endpoint string, args map[string]
 	for k, v := range args {
 		pargs.Set(k, v)
 	}
-	pargs.Set("auth-id", c.authID)
+	if c.subAuthID != "" {
+		pargs.Set("sub-auth-id", c.subAuthID)
+	} else {
+		pargs.Set("auth-id", c.authID)
+	}
 	pargs.Set("auth-password", c.authPassword)
 	purl.RawQuery = pargs.Encode()
 

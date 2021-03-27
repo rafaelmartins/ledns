@@ -26,8 +26,8 @@ type LetsEncrypt struct {
 	client     *acme.Client
 }
 
-func NewLetsEncrypt(ctx context.Context, dir string, production bool, cloudnsAuthID string, cloudnsAuthPassword string) (*LetsEncrypt, error) {
-	dns, err := cloudns.NewClouDNS(ctx, cloudnsAuthID, cloudnsAuthPassword)
+func NewLetsEncrypt(ctx context.Context, dir string, production bool, cloudnsAuthID string, cloudnsSubAuthID string, cloudnsAuthPassword string) (*LetsEncrypt, error) {
+	dns, err := cloudns.NewClouDNS(ctx, cloudnsAuthID, cloudnsSubAuthID, cloudnsAuthPassword)
 	if err != nil {
 		return nil, err
 	}
