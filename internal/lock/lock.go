@@ -2,6 +2,7 @@ package lock
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -19,7 +20,7 @@ func NewLock(fpath string) (*Lock, error) {
 	fp, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		if os.IsExist(err) {
-			return nil, fmt.Errorf("lock: lock exists: %s", fpath)
+			log.Fatalf("error: lock: lock exists: %s", fpath)
 		}
 		fp.Close()
 		os.Remove(fpath)
