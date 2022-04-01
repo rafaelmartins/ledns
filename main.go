@@ -59,7 +59,8 @@ func main() {
 
 		newCert, err := le.GetCertificate(ctx, cert, s.Force)
 		if err != nil {
-			exit(err)
+			log.Print("error: ", err)
+			continue
 		}
 		if newCert {
 			newCerts = append(newCerts, cert)
