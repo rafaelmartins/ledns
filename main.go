@@ -51,6 +51,7 @@ func main() {
 		exit(err)
 	}
 
+	badCerts := [][]string{}
 	newCerts := [][]string{}
 	for _, cert := range s.Certificates {
 		if len(cert) == 0 {
@@ -60,6 +61,7 @@ func main() {
 		newCert, err := le.GetCertificate(ctx, cert, s.Force)
 		if err != nil {
 			log.Print("error: ", err)
+			badCerts = append(badCerts, cert)
 			continue
 		}
 		if newCert {
@@ -79,5 +81,9 @@ func main() {
 				exit(err)
 			}
 		}
+	}
+
+	if len(badCerts) > 0 {
+		log.Fatalf("error: failed to get certificate(s): %q", badCerts)
 	}
 }
