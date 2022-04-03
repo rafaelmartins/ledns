@@ -84,6 +84,7 @@ func main() {
 	}
 
 	if len(badCerts) > 0 {
+		l.Close()
 		log.Fatalf("error: failed to get certificate(s): %q", badCerts)
 	}
 }
