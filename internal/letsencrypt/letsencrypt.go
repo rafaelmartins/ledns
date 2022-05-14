@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/rafaelmartins/ledns/internal/cloudns"
+	"github.com/rafaelmartins/ledns/internal/dns"
 	"golang.org/x/crypto/acme"
 )
 
@@ -22,12 +22,12 @@ const (
 type LetsEncrypt struct {
 	dir        string
 	production bool
-	dns        *cloudns.ClouDNS
+	dns        dns.DNS
 	client     *acme.Client
 }
 
-func NewLetsEncrypt(ctx context.Context, dir string, production bool, cloudnsAuthID string, cloudnsSubAuthID string, cloudnsAuthPassword string) (*LetsEncrypt, error) {
-	dns, err := cloudns.NewClouDNS(ctx, cloudnsAuthID, cloudnsSubAuthID, cloudnsAuthPassword)
+func NewLetsEncrypt(ctx context.Context, dir string, production bool) (*LetsEncrypt, error) {
+	dns, err := dns.GetProvider(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -180,12 +180,12 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		}
 
 		log.Printf("[%s: %s] deploying challenge ...", commonName, z.Identifier.Value)
-		if err := l.dns.DeployChallenge(ctx, z.Identifier.Value, token); err != nil {
+		if err := dns.DeployChallenge(ctx, l.dns, z.Identifier.Value, token); err != nil {
 			return false, err
 		}
-		defer func(ctx context.Context, dns *cloudns.ClouDNS, commonName string, name string, token string) {
+		defer func(ctx context.Context, d dns.DNS, commonName string, name string, token string) {
 			log.Printf("[%s: %s] cleaning challenge ...", commonName, name)
-			if err := dns.CleanChallenge(ctx, name, token); err != nil {
+			if err := dns.CleanChallenge(ctx, d, name, token); err != nil {
 				log.Printf("error: [%s: %s] %s", commonName, name, err)
 			}
 		}(ctx, l.dns, commonName, z.Identifier.Value, token)
@@ -198,7 +198,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 	if len(authNames) > 0 {
 		log.Printf("[%s] waiting for DNS propagation of challenges ...", commonName)
 		for _, name := range authNames {
-			if err := l.dns.WaitForChallenge(ctx, name); err != nil {
+			if err := dns.WaitForChallenge(ctx, l.dns, name); err != nil {
 				return false, err
 			}
 		}

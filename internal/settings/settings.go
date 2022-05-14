@@ -86,14 +86,7 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 
-	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
-		return nil, fmt.Errorf("settings: either LEDNS_CLOUDNS_AUTH_ID or LEDNS_CLOUDNS_SUB_AUTH_ID must be provided")
-	}
-	if s.ClouDNSAuthID != "" && s.ClouDNSSubAuthID != "" {
-		return nil, fmt.Errorf("settings: LEDNS_CLOUDNS_AUTH_ID and LEDNS_CLOUDNS_SUB_AUTH_ID are mutually exclusive")
-	}
-
-	s.ClouDNSAuthPassword, err = getString("LEDNS_CLOUDNS_AUTH_PASSWORD", "", true)
+	s.ClouDNSAuthPassword, err = getString("LEDNS_CLOUDNS_AUTH_PASSWORD", "", false)
 	if err != nil {
 		return nil, err
 	}

@@ -46,7 +46,7 @@ func main() {
 		log.Fatal("error: ", e)
 	}
 
-	le, err := letsencrypt.NewLetsEncrypt(ctx, s.DataDir, s.Production, s.ClouDNSAuthID, s.ClouDNSSubAuthID, s.ClouDNSAuthPassword)
+	le, err := letsencrypt.NewLetsEncrypt(ctx, s.DataDir, s.Production)
 	if err != nil {
 		exit(err)
 	}

@@ -1,4 +1,4 @@
-package cloudns
+package dns
 
 import (
 	"errors"

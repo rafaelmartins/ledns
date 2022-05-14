@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/rafaelmartins/ledns/internal/settings"
 )
 
 const (
@@ -21,11 +23,30 @@ type ClouDNS struct {
 	authPassword string
 }
 
-func NewClouDNS(ctx context.Context, authID string, subAuthID string, authPassword string) (*ClouDNS, error) {
+func NewClouDNS(ctx context.Context) (*ClouDNS, error) {
+	s, err := settings.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
+		return nil, nil
+	}
+
+	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
+		return nil, fmt.Errorf("cloudns: either LEDNS_CLOUDNS_AUTH_ID or LEDNS_CLOUDNS_SUB_AUTH_ID must be provided")
+	}
+	if s.ClouDNSAuthID != "" && s.ClouDNSSubAuthID != "" {
+		return nil, fmt.Errorf("cloudns: LEDNS_CLOUDNS_AUTH_ID and LEDNS_CLOUDNS_SUB_AUTH_ID are mutually exclusive")
+	}
+	if s.ClouDNSAuthPassword == "" {
+		return nil, fmt.Errorf("cloudns: LEDNS_CLOUDNS_AUTH_PASSWORD is required")
+	}
+
 	rv := &ClouDNS{
-		authID:       authID,
-		subAuthID:    subAuthID,
-		authPassword: authPassword,
+		authID:       s.ClouDNSAuthID,
+		subAuthID:    s.ClouDNSSubAuthID,
+		authPassword: s.ClouDNSAuthPassword,
 	}
 
 	if err := rv.request(ctx, "/dns/login.json", nil, nil); err != nil {
@@ -95,59 +116,17 @@ func (c *ClouDNS) request(ctx context.Context, endpoint string, args map[string]
 	return nil
 }
 
-func (c *ClouDNS) DeployChallenge(ctx context.Context, name string, token string) error {
-	prefix, domain, err := splitDomain(name)
-	if err != nil {
-		return err
-	}
-	host := "_acme-challenge"
-	if prefix != "" {
-		host += "." + prefix
-	}
-
+func (c *ClouDNS) AddTXTRecord(ctx context.Context, domain string, host string, value string) error {
 	return c.request(ctx, "/dns/add-record.json", map[string]string{
 		"domain-name": domain,
 		"record-type": "TXT",
 		"host":        host,
-		"record":      token,
+		"record":      value,
 		"ttl":         "60",
 	}, nil)
 }
 
-func (c *ClouDNS) WaitForChallenge(ctx context.Context, name string) error {
-	_, domain, err := splitDomain(name)
-	if err != nil {
-		return err
-	}
-	for {
-		updated := false
-		c.request(ctx, "/dns/is-updated.json", map[string]string{
-			"domain-name": domain,
-		}, &updated)
-		if updated {
-			return nil
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-		}
-
-		time.Sleep(5 * time.Second)
-	}
-}
-
-func (c *ClouDNS) CleanChallenge(ctx context.Context, name string, token string) error {
-	prefix, domain, err := splitDomain(name)
-	if err != nil {
-		return err
-	}
-	host := "_acme-challenge"
-	if prefix != "" {
-		host += "." + prefix
-	}
-
+func (c *ClouDNS) RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error {
 	type record struct {
 		Record string `json:"record"`
 	}
@@ -164,7 +143,7 @@ func (c *ClouDNS) CleanChallenge(ctx context.Context, name string, token string)
 
 	deleted := 0
 	for id, record := range records {
-		if record.Record != token {
+		if record.Record != value {
 			continue
 		}
 
@@ -183,4 +162,12 @@ func (c *ClouDNS) CleanChallenge(ctx context.Context, name string, token string)
 	}
 
 	return nil
+}
+
+func (c *ClouDNS) CheckTXTRecord(ctx context.Context, domain string, host string) (bool, error) {
+	updated := false
+	c.request(ctx, "/dns/is-updated.json", map[string]string{
+		"domain-name": domain,
+	}, &updated)
+	return updated, nil
 }
