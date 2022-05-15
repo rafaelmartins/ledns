@@ -178,12 +178,12 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		if err := dns.DeployChallenge(ctx, l.dns, z.Identifier.Value, token); err != nil {
 			return false, err
 		}
-		defer func(ctx context.Context, d dns.DNS, commonName string, name string, token string) {
+		defer func(d dns.DNS, commonName string, name string, token string) {
 			log.Printf("[%s: %s] cleaning challenge ...", commonName, name)
-			if err := dns.CleanChallenge(ctx, d, name, token); err != nil {
+			if err := dns.CleanChallenge(d, name, token); err != nil {
 				log.Printf("error: [%s: %s] %s", commonName, name, err)
 			}
-		}(ctx, l.dns, commonName, z.Identifier.Value, token)
+		}(l.dns, commonName, z.Identifier.Value, token)
 
 		chals = append(chals, chal)
 		authTokens[z.Identifier.Value] = token

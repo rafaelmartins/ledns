@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/rafaelmartins/ledns/internal/letsencrypt"
 	"github.com/rafaelmartins/ledns/internal/lock"
@@ -32,7 +35,13 @@ func main() {
 		return
 	}
 
+	sigInt := make(chan os.Signal)
+	signal.Notify(sigInt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	ctx, cancel := context.WithTimeout(context.Background(), s.Timeout)
+	go func() {
+		<-sigInt
+		cancel()
+	}()
 	defer cancel()
 
 	l, err := lock.NewLock(filepath.Join(s.DataDir, "locks", "lock"))

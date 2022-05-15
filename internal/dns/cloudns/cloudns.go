@@ -105,13 +105,13 @@ func (c *ClouDNS) AddTXTRecord(ctx context.Context, domain string, host string, 
 	}, nil)
 }
 
-func (c *ClouDNS) RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error {
+func (c *ClouDNS) RemoveTXTRecord(domain string, host string, value string) error {
 	type record struct {
 		Record string `json:"record"`
 	}
 	records := map[string]*record{}
 
-	if err := c.request(ctx, "/dns/records.json", map[string]string{
+	if err := c.request(context.Background(), "/dns/records.json", map[string]string{
 		"domain-name":   domain,
 		"type":          "TXT",
 		"host":          host,
@@ -130,7 +130,7 @@ func (c *ClouDNS) RemoveTXTRecord(ctx context.Context, domain string, host strin
 			time.Sleep(time.Second)
 		}
 
-		if err := c.request(ctx, "/dns/delete-record.json", map[string]string{
+		if err := c.request(context.Background(), "/dns/delete-record.json", map[string]string{
 			"domain-name": domain,
 			"record-id":   id,
 		}, nil); err != nil {

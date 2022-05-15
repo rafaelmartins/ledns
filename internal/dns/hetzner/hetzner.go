@@ -137,8 +137,8 @@ func (c *Hetzner) AddTXTRecord(ctx context.Context, domain string, host string, 
 	}, nil)
 }
 
-func (c *Hetzner) RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error {
-	zid, err := c.getZoneID(ctx, domain)
+func (c *Hetzner) RemoveTXTRecord(domain string, host string, value string) error {
+	zid, err := c.getZoneID(context.Background(), domain)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Hetzner) RemoveTXTRecord(ctx context.Context, domain string, host strin
 			Value string `json:"value"`
 		} `json:"records"`
 	}{}
-	if err := c.request(ctx, http.MethodGet, "/api/v1/records", map[string]string{
+	if err := c.request(context.Background(), http.MethodGet, "/api/v1/records", map[string]string{
 		"zone_id": zid,
 	}, nil, &v); err != nil {
 		return err
@@ -167,7 +167,7 @@ func (c *Hetzner) RemoveTXTRecord(ctx context.Context, domain string, host strin
 			time.Sleep(time.Second)
 		}
 
-		if err := c.request(ctx, http.MethodDelete, "/api/v1/records/"+rec.ID, nil, nil, nil); err != nil {
+		if err := c.request(context.Background(), http.MethodDelete, "/api/v1/records/"+rec.ID, nil, nil, nil); err != nil {
 			return err
 		}
 
