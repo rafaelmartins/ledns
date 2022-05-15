@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/rafaelmartins/ledns/internal/settings"
 )
 
 const (
@@ -23,33 +21,14 @@ type ClouDNS struct {
 	authPassword string
 }
 
-func NewClouDNS(ctx context.Context) (*ClouDNS, error) {
-	s, err := settings.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
-		return nil, nil
-	}
-
-	if s.ClouDNSAuthID == "" && s.ClouDNSSubAuthID == "" {
-		return nil, fmt.Errorf("cloudns: either LEDNS_CLOUDNS_AUTH_ID or LEDNS_CLOUDNS_SUB_AUTH_ID must be provided")
-	}
-	if s.ClouDNSAuthID != "" && s.ClouDNSSubAuthID != "" {
-		return nil, fmt.Errorf("cloudns: LEDNS_CLOUDNS_AUTH_ID and LEDNS_CLOUDNS_SUB_AUTH_ID are mutually exclusive")
-	}
-	if s.ClouDNSAuthPassword == "" {
-		return nil, fmt.Errorf("cloudns: LEDNS_CLOUDNS_AUTH_PASSWORD is required")
-	}
-
+func NewClouDNS(authID string, subAuthID string, authPassword string) (*ClouDNS, error) {
 	rv := &ClouDNS{
-		authID:       s.ClouDNSAuthID,
-		subAuthID:    s.ClouDNSSubAuthID,
-		authPassword: s.ClouDNSAuthPassword,
+		authID:       authID,
+		subAuthID:    subAuthID,
+		authPassword: authPassword,
 	}
 
-	if err := rv.request(ctx, "/dns/login.json", nil, nil); err != nil {
+	if err := rv.request(context.Background(), "/dns/login.json", nil, nil); err != nil {
 		return nil, err
 	}
 	return rv, nil

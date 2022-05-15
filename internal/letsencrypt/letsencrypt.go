@@ -26,12 +26,7 @@ type LetsEncrypt struct {
 	client     *acme.Client
 }
 
-func NewLetsEncrypt(ctx context.Context, dir string, production bool) (*LetsEncrypt, error) {
-	dns, err := dns.GetProvider(ctx)
-	if err != nil {
-		return nil, err
-	}
-
+func NewLetsEncrypt(ctx context.Context, dir string, production bool, dns dns.DNS) (*LetsEncrypt, error) {
 	rv := &LetsEncrypt{
 		dir:        dir,
 		production: production,

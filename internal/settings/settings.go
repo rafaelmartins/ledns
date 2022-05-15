@@ -9,6 +9,9 @@ import (
 	"time"
 
 	"github.com/google/shlex"
+	"github.com/rafaelmartins/ledns/internal/dns"
+	"github.com/rafaelmartins/ledns/internal/dns/cloudns"
+	"github.com/rafaelmartins/ledns/internal/dns/hetzner"
 )
 
 var (
@@ -27,6 +30,7 @@ type Settings struct {
 	Production          bool
 	Force               bool
 	Timeout             time.Duration
+	DNSProvider         dns.DNS
 }
 
 func getString(key string, def string, required bool) (string, error) {
@@ -92,9 +96,35 @@ func Get() (*Settings, error) {
 		return nil, err
 	}
 
+	if s.ClouDNSAuthID != "" || s.ClouDNSSubAuthID != "" {
+		if s.ClouDNSAuthID != "" && s.ClouDNSSubAuthID != "" {
+			return nil, fmt.Errorf("settings: LEDNS_CLOUDNS_AUTH_ID and LEDNS_CLOUDNS_SUB_AUTH_ID are mutually exclusive")
+		}
+		if s.ClouDNSAuthPassword == "" {
+			return nil, fmt.Errorf("settings: LEDNS_CLOUDNS_AUTH_PASSWORD is required")
+		}
+		if p, err := cloudns.NewClouDNS(s.ClouDNSAuthID, s.ClouDNSSubAuthID, s.ClouDNSAuthPassword); err != nil {
+			return nil, err
+		} else {
+			s.DNSProvider = p
+		}
+	}
+
 	s.HetznerAPIKey, err = getString("LEDNS_HETZNER_API_KEY", "", false)
 	if err != nil {
 		return nil, err
+	}
+
+	if s.HetznerAPIKey != "" {
+		if p, err := hetzner.NewHetzner(s.HetznerAPIKey); err != nil {
+			return nil, err
+		} else {
+			s.DNSProvider = p
+		}
+	}
+
+	if s.DNSProvider == nil {
+		return nil, fmt.Errorf("settings: DNS provider configuration missing")
 	}
 
 	s.DataDir, err = getString("LEDNS_DATA_DIR", "/var/lib/ledns", true)

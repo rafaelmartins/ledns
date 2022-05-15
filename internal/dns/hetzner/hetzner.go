@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/rafaelmartins/ledns/internal/dns/utils"
-	"github.com/rafaelmartins/ledns/internal/settings"
 )
 
 const (
@@ -23,18 +22,9 @@ type Hetzner struct {
 	apiKey string
 }
 
-func NewHetzner(ctx context.Context) (*Hetzner, error) {
-	s, err := settings.Get()
-	if err != nil {
-		return nil, err
-	}
-
-	if s.HetznerAPIKey == "" {
-		return nil, nil
-	}
-
+func NewHetzner(apiKey string) (*Hetzner, error) {
 	return &Hetzner{
-		apiKey: s.HetznerAPIKey,
+		apiKey: apiKey,
 	}, nil
 }
 
@@ -110,7 +100,7 @@ func (c *Hetzner) getZoneID(ctx context.Context, domain string) (string, error) 
 		return "", fmt.Errorf("hetzner: zone not found: %s", domain)
 	}
 	if len(v.Zones) > 1 {
-		return "", fmt.Errorf("hetzner: more than one zone not found: %s", domain)
+		return "", fmt.Errorf("hetzner: more than one zone found: %s", domain)
 	}
 	if domain != v.Zones[0].Name {
 		return "", fmt.Errorf("hetzner: returned zone does not match: %q != %q", domain, v.Zones[0].Name)
