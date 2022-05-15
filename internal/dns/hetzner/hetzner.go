@@ -80,11 +80,10 @@ func (c *Hetzner) request(ctx context.Context, method string, endpoint string, a
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		type response struct {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		e := struct {
 			Message string `json:"message"`
-		}
-		e := response{}
+		}{}
 		if err := json.Unmarshal(body, &e); err != nil {
 			return fmt.Errorf("hetzner: request failed (%d): %s", resp.StatusCode, body)
 		}
@@ -98,14 +97,12 @@ func (c *Hetzner) request(ctx context.Context, method string, endpoint string, a
 }
 
 func (c *Hetzner) getZoneID(ctx context.Context, domain string) (string, error) {
-	type result struct {
+	v := struct {
 		Zones []struct {
 			ID   string `json:"id"`
 			Name string `json:"name"`
 		} `json:"zones"`
-	}
-
-	v := result{}
+	}{}
 	if err := c.request(ctx, http.MethodGet, "/api/v1/zones", map[string]string{
 		"name": domain,
 	}, nil, &v); err != nil {
@@ -146,16 +143,14 @@ func (c *Hetzner) RemoveTXTRecord(ctx context.Context, domain string, host strin
 		return err
 	}
 
-	type result struct {
+	v := struct {
 		Records []struct {
 			ID    string `json:"id"`
 			Name  string `json:"name"`
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"records"`
-	}
-
-	v := result{}
+	}{}
 	if err := c.request(ctx, http.MethodGet, "/api/v1/records", map[string]string{
 		"zone_id": zid,
 	}, nil, &v); err != nil {
