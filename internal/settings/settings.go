@@ -19,6 +19,7 @@ type Settings struct {
 	ClouDNSAuthID       string
 	ClouDNSSubAuthID    string
 	ClouDNSAuthPassword string
+	HetznerAPIKey       string
 	DataDir             string
 	Certificates        [][]string
 	UpdateCommand       []string
@@ -87,6 +88,11 @@ func Get() (*Settings, error) {
 	}
 
 	s.ClouDNSAuthPassword, err = getString("LEDNS_CLOUDNS_AUTH_PASSWORD", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	s.HetznerAPIKey, err = getString("LEDNS_HETZNER_API_KEY", "", false)
 	if err != nil {
 		return nil, err
 	}

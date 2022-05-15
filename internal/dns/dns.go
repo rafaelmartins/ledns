@@ -6,29 +6,39 @@ import (
 	"time"
 
 	"github.com/rafaelmartins/ledns/internal/dns/cloudns"
+	"github.com/rafaelmartins/ledns/internal/dns/hetzner"
+	"github.com/rafaelmartins/ledns/internal/dns/utils"
 )
 
 type DNS interface {
 	AddTXTRecord(ctx context.Context, domain string, host string, value string) error
 	RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error
-	CheckTXTRecord(ctx context.Context, domain string, host string) (bool, error)
+	CheckTXTRecord(ctx context.Context, domain string, host string, value string) (bool, error)
 }
 
 func GetProvider(ctx context.Context) (DNS, error) {
 	// FIXME: detect provider from nameservers
-	d, err := cloudns.NewClouDNS(ctx)
+	c, err := cloudns.NewClouDNS(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if d != nil {
-		return d, nil
+	if c != nil {
+		return c, nil
+	}
+
+	h, err := hetzner.NewHetzner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if h != nil {
+		return h, nil
 	}
 
 	return nil, fmt.Errorf("dns: DNS provider must be configured")
 }
 
 func DeployChallenge(ctx context.Context, dns DNS, name string, token string) error {
-	prefix, domain, err := splitDomain(name)
+	prefix, domain, err := utils.SplitDomain(name)
 	if err != nil {
 		return err
 	}
@@ -40,8 +50,8 @@ func DeployChallenge(ctx context.Context, dns DNS, name string, token string) er
 	return dns.AddTXTRecord(ctx, domain, host, token)
 }
 
-func WaitForChallenge(ctx context.Context, dns DNS, name string) error {
-	prefix, domain, err := splitDomain(name)
+func WaitForChallenge(ctx context.Context, dns DNS, name string, token string) error {
+	prefix, domain, err := utils.SplitDomain(name)
 	if err != nil {
 		return err
 	}
@@ -51,7 +61,7 @@ func WaitForChallenge(ctx context.Context, dns DNS, name string) error {
 	}
 
 	for {
-		updated, err := dns.CheckTXTRecord(ctx, domain, host)
+		updated, err := dns.CheckTXTRecord(ctx, domain, host, token)
 		if err != nil {
 			return err
 		}
@@ -70,7 +80,7 @@ func WaitForChallenge(ctx context.Context, dns DNS, name string) error {
 }
 
 func CleanChallenge(ctx context.Context, dns DNS, name string, token string) error {
-	prefix, domain, err := splitDomain(name)
+	prefix, domain, err := utils.SplitDomain(name)
 	if err != nil {
 		return err
 	}

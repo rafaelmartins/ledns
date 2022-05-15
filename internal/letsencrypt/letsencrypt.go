@@ -150,7 +150,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 	defer l.cleanupAuthorizations(ctx, commonName, order.AuthzURLs)
 
 	chals := []*acme.Challenge{}
-	authNames := []string{}
+	authTokens := map[string]string{}
 	authURIs := []string{}
 	for _, u := range order.AuthzURLs {
 		z, err := l.client.GetAuthorization(ctx, u)
@@ -191,14 +191,14 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		}(ctx, l.dns, commonName, z.Identifier.Value, token)
 
 		chals = append(chals, chal)
-		authNames = append(authNames, z.Identifier.Value)
+		authTokens[z.Identifier.Value] = token
 		authURIs = append(authURIs, z.URI)
 	}
 
-	if len(authNames) > 0 {
+	if len(authTokens) > 0 {
 		log.Printf("[%s] waiting for DNS propagation of challenges ...", commonName)
-		for _, name := range authNames {
-			if err := dns.WaitForChallenge(ctx, l.dns, name); err != nil {
+		for name, token := range authTokens {
+			if err := dns.WaitForChallenge(ctx, l.dns, name, token); err != nil {
 				return false, err
 			}
 		}

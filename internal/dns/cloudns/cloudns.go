@@ -164,7 +164,7 @@ func (c *ClouDNS) RemoveTXTRecord(ctx context.Context, domain string, host strin
 	return nil
 }
 
-func (c *ClouDNS) CheckTXTRecord(ctx context.Context, domain string, host string) (bool, error) {
+func (c *ClouDNS) CheckTXTRecord(ctx context.Context, domain string, host string, value string) (bool, error) {
 	updated := false
 	c.request(ctx, "/dns/is-updated.json", map[string]string{
 		"domain-name": domain,
