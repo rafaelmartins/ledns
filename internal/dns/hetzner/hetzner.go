@@ -23,9 +23,18 @@ type Hetzner struct {
 }
 
 func NewHetzner(apiKey string) (*Hetzner, error) {
-	return &Hetzner{
+	rv := &Hetzner{
 		apiKey: apiKey,
-	}, nil
+	}
+
+	// just check if authentication works
+	if err := rv.request(context.Background(), http.MethodGet, "/api/v1/zones", map[string]string{
+		"per_page": "1",
+	}, nil, nil); err != nil {
+		return nil, err
+	}
+
+	return rv, nil
 }
 
 func (c *Hetzner) request(ctx context.Context, method string, endpoint string, args map[string]string, data map[string]interface{}, v interface{}) error {
@@ -72,7 +81,14 @@ func (c *Hetzner) request(ctx context.Context, method string, endpoint string, a
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("hetzner: request failed (%d): %s", resp.StatusCode, body)
+		type response struct {
+			Message string `json:"message"`
+		}
+		e := response{}
+		if err := json.Unmarshal(body, &e); err != nil {
+			return fmt.Errorf("hetzner: request failed (%d): %s", resp.StatusCode, body)
+		}
+		return fmt.Errorf("hetzner: request failed (%d): %s", resp.StatusCode, e.Message)
 	}
 
 	if v != nil {
@@ -112,7 +128,7 @@ func (c *Hetzner) getZoneID(ctx context.Context, domain string) (string, error) 
 func (c *Hetzner) AddTXTRecord(ctx context.Context, domain string, host string, value string) error {
 	zid, err := c.getZoneID(ctx, domain)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	return c.request(ctx, http.MethodPost, "/api/v1/records", nil, map[string]interface{}{
@@ -127,7 +143,7 @@ func (c *Hetzner) AddTXTRecord(ctx context.Context, domain string, host string, 
 func (c *Hetzner) RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error {
 	zid, err := c.getZoneID(ctx, domain)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	type result struct {
