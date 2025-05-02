@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/rafaelmartins/ledns/internal/dns/utils"
+	"rafaelmartins.com/p/ledns/internal/dns/utils"
 )
 
 type DNS interface {

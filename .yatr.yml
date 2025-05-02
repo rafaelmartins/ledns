@@ -1,4 +1,0 @@
-targets:
-    distcheck:
-        task_args:
-            - ./...

@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/rafaelmartins/ledns/internal/dns/utils"
+	"rafaelmartins.com/p/ledns/internal/dns/utils"
 )
 
 const (

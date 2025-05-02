@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/rafaelmartins/ledns/internal/letsencrypt"
-	"github.com/rafaelmartins/ledns/internal/lock"
-	"github.com/rafaelmartins/ledns/internal/settings"
+	"rafaelmartins.com/p/ledns/internal/letsencrypt"
+	"rafaelmartins.com/p/ledns/internal/lock"
+	"rafaelmartins.com/p/ledns/internal/settings"
 )
 
 func main() {

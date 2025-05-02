@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/google/shlex"
-	"github.com/rafaelmartins/ledns/internal/dns"
-	"github.com/rafaelmartins/ledns/internal/dns/cloudns"
-	"github.com/rafaelmartins/ledns/internal/dns/hetzner"
+	"rafaelmartins.com/p/ledns/internal/dns"
+	"rafaelmartins.com/p/ledns/internal/dns/cloudns"
+	"rafaelmartins.com/p/ledns/internal/dns/hetzner"
 )
 
 var (

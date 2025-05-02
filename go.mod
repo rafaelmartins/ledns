@@ -1,4 +1,4 @@
-module github.com/rafaelmartins/ledns
+module rafaelmartins.com/p/ledns
 
 go 1.15
 

@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/rafaelmartins/ledns/internal/dns"
 	"golang.org/x/crypto/acme"
+	"rafaelmartins.com/p/ledns/internal/dns"
 )
 
 const (
