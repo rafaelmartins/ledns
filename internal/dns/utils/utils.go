@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"slices"
 	"time"
 )
 
@@ -66,11 +67,9 @@ func CheckTXTFromNS(domain string, host string, value string) (bool, error) {
 
 		valid := false
 		if txtl, err := res.LookupTXT(context.Background(), host+"."+domain); err == nil {
-			for _, txt := range txtl {
-				if txt == value {
-					valid = true
-					break
-				}
+			if slices.Contains(txtl, value) {
+				valid = true
+				break
 			}
 		}
 		if !valid {

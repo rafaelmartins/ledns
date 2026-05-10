@@ -1,6 +1,6 @@
 module rafaelmartins.com/p/ledns
 
-go 1.15
+go 1.24
 
 require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510

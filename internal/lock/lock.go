@@ -27,7 +27,7 @@ func NewLock(fpath string) (*Lock, error) {
 		return nil, err
 	}
 
-	if _, err := fp.Write([]byte(fmt.Sprintf("%d\n", int32(time.Now().Unix())))); err != nil {
+	if _, err := fp.Write(fmt.Appendf(nil, "%d\n", int32(time.Now().Unix()))); err != nil {
 		fp.Close()
 		os.Remove(fpath)
 		return nil, err

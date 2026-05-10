@@ -34,7 +34,7 @@ func NewClouDNS(authID string, subAuthID string, authPassword string) (*ClouDNS,
 	return rv, nil
 }
 
-func (c *ClouDNS) request(ctx context.Context, endpoint string, args map[string]string, v interface{}) error {
+func (c *ClouDNS) request(ctx context.Context, endpoint string, args map[string]string, v any) error {
 	purl, err := url.ParseRequestURI(apiUrl)
 	if err != nil {
 		return err

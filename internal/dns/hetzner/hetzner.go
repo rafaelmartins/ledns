@@ -37,7 +37,7 @@ func NewHetzner(apiKey string) (*Hetzner, error) {
 	return rv, nil
 }
 
-func (c *Hetzner) request(ctx context.Context, method string, endpoint string, args map[string]string, data map[string]interface{}, v interface{}) error {
+func (c *Hetzner) request(ctx context.Context, method string, endpoint string, args map[string]string, data map[string]any, v any) error {
 	purl, err := url.ParseRequestURI(apiUrl)
 	if err != nil {
 		return err
@@ -128,7 +128,7 @@ func (c *Hetzner) AddTXTRecord(ctx context.Context, domain string, host string, 
 		return err
 	}
 
-	return c.request(ctx, http.MethodPost, "/api/v1/records", nil, map[string]interface{}{
+	return c.request(ctx, http.MethodPost, "/api/v1/records", nil, map[string]any{
 		"name":    host,
 		"ttl":     60,
 		"type":    "TXT",

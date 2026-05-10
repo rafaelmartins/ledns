@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 )
 
@@ -69,27 +70,13 @@ func needsNewCertificate(certfile string, names []string) (bool, time.Time, []st
 	// check if names changed
 	added := []string{}
 	for _, n := range names {
-		found := false
-		for _, o := range crt.DNSNames {
-			if n == o {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(crt.DNSNames, n) {
 			added = append(added, n)
 		}
 	}
 	removed := []string{}
 	for _, o := range crt.DNSNames {
-		found := false
-		for _, n := range names {
-			if o == n {
-				found = true
-				break
-			}
-		}
-		if !found {
+		if !slices.Contains(names, o) {
 			removed = append(removed, o)
 		}
 	}
