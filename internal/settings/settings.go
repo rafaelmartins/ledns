@@ -11,7 +11,6 @@ import (
 	"github.com/google/shlex"
 	"rafaelmartins.com/p/ledns/internal/dns"
 	"rafaelmartins.com/p/ledns/internal/dns/cloudns"
-	"rafaelmartins.com/p/ledns/internal/dns/hetzner"
 	"rafaelmartins.com/p/ledns/internal/dns/powerdns"
 )
 
@@ -26,7 +25,6 @@ type Settings struct {
 	ClouDNSAuthID       string
 	ClouDNSSubAuthID    string
 	ClouDNSAuthPassword string
-	HetznerAPIKey       string
 	DataDir             string
 	Certificates        [][]string
 	UpdateCommand       []string
@@ -108,19 +106,6 @@ func Get() (*Settings, error) {
 			return nil, fmt.Errorf("settings: LEDNS_CLOUDNS_AUTH_PASSWORD is required")
 		}
 		if p, err := cloudns.NewClouDNS(s.ClouDNSAuthID, s.ClouDNSSubAuthID, s.ClouDNSAuthPassword); err != nil {
-			return nil, err
-		} else {
-			s.DNSProvider = p
-		}
-	}
-
-	s.HetznerAPIKey, err = getString("LEDNS_HETZNER_API_KEY", "", false)
-	if err != nil {
-		return nil, err
-	}
-
-	if s.HetznerAPIKey != "" {
-		if p, err := hetzner.NewHetzner(s.HetznerAPIKey); err != nil {
 			return nil, err
 		} else {
 			s.DNSProvider = p
