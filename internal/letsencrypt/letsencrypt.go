@@ -180,7 +180,7 @@ func (l *LetsEncrypt) GetCertificate(ctx context.Context, names []string, force 
 		}
 		defer func(d dns.DNS, commonName string, name string, token string) {
 			log.Printf("[%s: %s] cleaning challenge ...", commonName, name)
-			if err := dns.CleanChallenge(d, name, token); err != nil {
+			if err := dns.CleanChallenge(context.Background(), d, name, token); err != nil {
 				log.Printf("error: [%s: %s] %s", commonName, name, err)
 			}
 		}(l.dns, commonName, z.Identifier.Value, token)

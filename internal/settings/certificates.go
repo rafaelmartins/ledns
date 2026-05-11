@@ -3,14 +3,13 @@ package settings
 import (
 	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 func getCertificates(configdir string) ([][]string, error) {
-	files, err := ioutil.ReadDir(configdir)
+	files, err := os.ReadDir(configdir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil

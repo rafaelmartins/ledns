@@ -120,11 +120,11 @@ func (p *PowerDNS) AddTXTRecord(ctx context.Context, domain string, host string,
 }
 
 func (p *PowerDNS) CheckTXTRecord(ctx context.Context, domain string, host string, value string) (bool, error) {
-	return utils.CheckTXTFromNS(domain, host, value)
+	return utils.CheckTXTFromNS(ctx, domain, host, value)
 }
 
-func (p *PowerDNS) RemoveTXTRecord(domain string, host string, value string) error {
-	return p.request(context.Background(), http.MethodPatch, "/api/v1/servers/"+p.server+"/zones/"+domain+".", map[string]any{
+func (p *PowerDNS) RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error {
+	return p.request(ctx, http.MethodPatch, "/api/v1/servers/"+p.server+"/zones/"+domain+".", map[string]any{
 		"rrsets": []map[string]any{
 			{
 				"name":       host + "." + domain + ".",

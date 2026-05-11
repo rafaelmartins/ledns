@@ -10,7 +10,7 @@ import (
 type DNS interface {
 	AddTXTRecord(ctx context.Context, domain string, host string, value string) error
 	CheckTXTRecord(ctx context.Context, domain string, host string, value string) (bool, error)
-	RemoveTXTRecord(domain string, host string, value string) error
+	RemoveTXTRecord(ctx context.Context, domain string, host string, value string) error
 }
 
 func DeployChallenge(ctx context.Context, dns DNS, name string, token string) error {
@@ -55,7 +55,7 @@ func WaitForChallenge(ctx context.Context, dns DNS, name string, token string) e
 	}
 }
 
-func CleanChallenge(dns DNS, name string, token string) error {
+func CleanChallenge(ctx context.Context, dns DNS, name string, token string) error {
 	prefix, domain, err := utils.SplitDomain(name)
 	if err != nil {
 		return err
@@ -65,5 +65,5 @@ func CleanChallenge(dns DNS, name string, token string) error {
 		host += "." + prefix
 	}
 
-	return dns.RemoveTXTRecord(domain, host, token)
+	return dns.RemoveTXTRecord(ctx, domain, host, token)
 }

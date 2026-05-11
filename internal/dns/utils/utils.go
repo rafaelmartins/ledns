@@ -48,7 +48,7 @@ func SplitDomain(name string) (string, string, error) {
 	return "", "", fmt.Errorf("dns: failed to find delegated domain for name %q", name)
 }
 
-func CheckTXTFromNS(domain string, host string, value string) (bool, error) {
+func CheckTXTFromNS(ctx context.Context, domain string, host string, value string) (bool, error) {
 	nsl, err := net.LookupNS(domain)
 	if err != nil {
 		return false, err
@@ -66,7 +66,7 @@ func CheckTXTFromNS(domain string, host string, value string) (bool, error) {
 		}
 
 		valid := false
-		if txtl, err := res.LookupTXT(context.Background(), host+"."+domain); err == nil {
+		if txtl, err := res.LookupTXT(ctx, host+"."+domain); err == nil {
 			if slices.Contains(txtl, value) {
 				valid = true
 				break
