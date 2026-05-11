@@ -12,6 +12,7 @@ import (
 	"rafaelmartins.com/p/ledns/internal/dns"
 	"rafaelmartins.com/p/ledns/internal/dns/cloudns"
 	"rafaelmartins.com/p/ledns/internal/dns/hetzner"
+	"rafaelmartins.com/p/ledns/internal/dns/powerdns"
 )
 
 var (
@@ -19,6 +20,9 @@ var (
 )
 
 type Settings struct {
+	PowerDNSApiURL      string
+	PowerDNSApiKey      string
+	PowerDNSServer      string
 	ClouDNSAuthID       string
 	ClouDNSSubAuthID    string
 	ClouDNSAuthPassword string
@@ -117,6 +121,29 @@ func Get() (*Settings, error) {
 
 	if s.HetznerAPIKey != "" {
 		if p, err := hetzner.NewHetzner(s.HetznerAPIKey); err != nil {
+			return nil, err
+		} else {
+			s.DNSProvider = p
+		}
+	}
+
+	s.PowerDNSApiURL, err = getString("LEDNS_POWERDNS_API_URL", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	s.PowerDNSApiKey, err = getString("LEDNS_POWERDNS_API_KEY", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	s.PowerDNSServer, err = getString("LEDNS_POWERDNS_SERVER", "", false)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.PowerDNSApiURL != "" && s.PowerDNSApiKey != "" {
+		if p, err := powerdns.NewPowerDNS(s.PowerDNSApiURL, s.PowerDNSApiKey, s.PowerDNSServer); err != nil {
 			return nil, err
 		} else {
 			s.DNSProvider = p

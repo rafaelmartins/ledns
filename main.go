@@ -35,8 +35,8 @@ func main() {
 		return
 	}
 
-	sigInt := make(chan os.Signal)
-	signal.Notify(sigInt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	sigInt := make(chan os.Signal, 1)
+	signal.Notify(sigInt, syscall.SIGINT, syscall.SIGTERM)
 	ctx, cancel := context.WithTimeout(context.Background(), s.Timeout)
 	go func() {
 		<-sigInt
