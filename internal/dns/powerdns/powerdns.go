@@ -107,7 +107,7 @@ func (p *PowerDNS) AddTXTRecord(ctx context.Context, domain string, host string,
 				"name":       host + "." + domain + ".",
 				"type":       "TXT",
 				"ttl":        60,
-				"changetype": "REPLACE",
+				"changetype": "EXTEND",
 				"records": []map[string]any{
 					{
 						"content":  "\"" + value + "\"",
