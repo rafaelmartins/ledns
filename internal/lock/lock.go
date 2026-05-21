@@ -1,7 +1,9 @@
 package lock
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,20 +21,17 @@ func NewLock(fpath string) (*Lock, error) {
 
 	fp, err := os.OpenFile(fpath, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
-		if os.IsExist(err) {
+		if errors.Is(err, fs.ErrExist) {
 			log.Fatalf("error: lock: lock exists: %s", fpath)
 		}
-		fp.Close()
-		os.Remove(fpath)
 		return nil, err
 	}
+	defer fp.Close()
 
 	if _, err := fp.Write(fmt.Appendf(nil, "%d\n", int32(time.Now().Unix()))); err != nil {
-		fp.Close()
 		os.Remove(fpath)
 		return nil, err
 	}
-	fp.Close()
 
 	return &Lock{fpath: fpath}, nil
 }

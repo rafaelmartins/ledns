@@ -7,7 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -47,7 +47,7 @@ func loadPrivateKey(keyfile string) (*ecdsa.PrivateKey, error) {
 	}
 	defer fp.Close()
 
-	b, err := ioutil.ReadAll(fp)
+	b, err := io.ReadAll(fp)
 	if err != nil {
 		return nil, err
 	}

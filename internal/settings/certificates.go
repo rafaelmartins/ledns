@@ -2,7 +2,9 @@ package settings
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,7 +13,7 @@ import (
 func getCertificates(configdir string) ([][]string, error) {
 	files, err := os.ReadDir(configdir)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil, nil
 		}
 		return nil, err

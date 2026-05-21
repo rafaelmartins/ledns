@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"slices"
@@ -38,7 +37,7 @@ func writeCertificate(certfile string, chain [][]byte) error {
 }
 
 func needsNewCertificate(certfile string, names []string) (bool, time.Time, []string, []string) {
-	b, err := ioutil.ReadFile(certfile)
+	b, err := os.ReadFile(certfile)
 	if err != nil {
 		return true, time.Time{}, nil, nil
 	}
